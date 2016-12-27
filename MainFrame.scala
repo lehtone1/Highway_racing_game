@@ -1,12 +1,14 @@
  package o1.game
 
 import scala.swing._
-import scala.swing.event._
-import java.awt.Color
-import java.awt.event._
-import com.sun.glass.events.MouseEvent
-import java.awt.{geom}
-
+ import scala.swing.event._
+ import java.awt.Color
+ import java.awt.event._
+ import java.awt.{geom}
+import o1.game.Wall
+import o1.game.Spot
+import o1.game.Player
+import o1.game.Floor
 
 object MainFrame extends SimpleSwingApplication  {
   val width = 40
@@ -14,11 +16,43 @@ object MainFrame extends SimpleSwingApplication  {
   val cellSize = 25
   var world: Array[Array[Spot]] = Array.fill(width, height)(Floor)
   val r = scala.util.Random
-  val player = new Player(1, 1)
+  val player = new Player(width/2, height)
+  
+  
+  //Creates a row full of wall objects
+  def fillWall(row: Int) = {
+    for(line <- world){
+      line(row) = Wall
+    }
+  }
+  
+  //Creates holes marked with Floor-objects to the row.
+  def fillRow(row: Int) = {
+    val randomNum = r.nextInt(width)
+    var crawler = 0
+    while(crawler < randomNum){
+      val randomNum2 = r.nextInt(width - 1)
+      world(randomNum2)(row) = Floor
+      crawler += 1
+    }
+  }
+  //Fills the "world" with holed walls
+  def fillWorld = {
+    for(line <- 0 to height - 1){
+      fillWall(line)
+      fillRow(line)
+    }
+  }
   
   val canvas = new GridPanel(rows0 = height, cols0 = width) {
     
   preferredSize = new Dimension(width * cellSize, height * cellSize)
+  
+  fillWorld
+  
+
+  
+  //Paints the world again after some event
   
   override def paintComponent(g: Graphics2D) {
       for (i <- 0 until width) {
@@ -29,7 +63,7 @@ object MainFrame extends SimpleSwingApplication  {
               g.fillRect(i * cellSize, k * cellSize, cellSize, cellSize)
             }
             case Floor => {         // If a floor is there, change color to cyan and paint a cyan tile representing floor
-              g.setColor(Color.CYAN)
+              g.setColor(Color.WHITE)
               g.fillRect(i * cellSize, k * cellSize, cellSize, cellSize)
             }
           }
@@ -52,6 +86,7 @@ object MainFrame extends SimpleSwingApplication  {
     listenTo(canvas.keys)
     canvas.focusable = true
     canvas.requestFocus
+    //Determines the game reactions for keyboards and mouse events
     reactions += {
       case KeyPressed(canvas, Key.Left, _, _) => {
         if(world(player.x - 1)(player.y) != Wall){
@@ -77,6 +112,7 @@ object MainFrame extends SimpleSwingApplication  {
           repaint()
         }
       }
+        
       case MouseClicked(canvas, point, _, clicks, _) => {       
         if(clicks == 2){
           world(point.x/cellSize)(point.y/cellSize) = Floor
