@@ -9,6 +9,7 @@ import o1.game.Wall
 import o1.game.Spot
 import o1.game.Player
 import o1.game.Floor
+import scala.collection.mutable.Buffer
 
 object MainFrame extends SimpleSwingApplication  {
   val width = 40
@@ -17,6 +18,7 @@ object MainFrame extends SimpleSwingApplication  {
   var world: Array[Array[Spot]] = Array.fill(width, height)(Floor)
   val r = scala.util.Random
   val player = new Player(width/2, height)
+  var pressedKeys = Buffer[Key.Value]() //A buffer that holds all keys that are pressed at the same time
   
   
   //Creates a row full of wall objects
@@ -88,31 +90,58 @@ object MainFrame extends SimpleSwingApplication  {
     canvas.requestFocus
     //Determines the game reactions for keyboards and mouse events
     reactions += {
-      case KeyPressed(canvas, Key.Left, _, _) => {
-        if(world(player.x - 1)(player.y) != Wall){
-          player.move(player.x - 1, player.y)
-          repaint()
+      case KeyPressed(canvas, key, _, _) => { //When any key is pressed
+        pressedKeys += key //the key is added to the pressed keys
+        if(pressedKeys contains Key.Space){ //When space is one of the keys
+          if(pressedKeys contains Key.Left){//the player moves two spaces to 
+            if(world(player.x - 2)(player.y) != Wall){//chosen direction
+              player.move(player.x - 2, player.y)
+              repaint()
+            }
+          }else if(pressedKeys contains Key.Right) {
+            if(world(player.x + 2)(player.y) != Wall){
+              player.move(player.x + 2, player.y)
+              repaint()
+            }
+          }else if(pressedKeys contains Key.Up) {
+            if(world(player.x)(player.y - 2) != Wall){
+              player.move(player.x, player.y - 2)
+              repaint()
+            }
+          }else if(pressedKeys contains Key.Down){
+            if(world(player.x)(player.y + 2) != Wall){
+              player.move(player.x, player.y + 2)
+              repaint()
+            }
+          }   
+        }else if(pressedKeys contains Key.Left){
+          if(world(player.x - 1)(player.y) != Wall){
+            player.move(player.x - 1, player.y)
+            repaint()
+            }
+        }else if(pressedKeys contains Key.Right) {
+          if(world(player.x + 1)(player.y) != Wall){
+            player.move(player.x + 1, player.y)
+            repaint()
+            }
+        }else if(pressedKeys contains Key.Up) {
+          if(world(player.x)(player.y - 1) != Wall){
+            player.move(player.x, player.y - 1)
+            repaint()
+            }
+        }else if(pressedKeys contains Key.Down){
+          if(world(player.x)(player.y + 1) != Wall){
+            player.move(player.x, player.y + 1)
+            repaint()
+          }
         }
+  
       }
-      case KeyPressed(canvas, Key.Right, _, _) => {
-        if(world(player.x + 1)(player.y) != Wall){
-          player.move(player.x + 1, player.y)
-          repaint()
-        }
+      
+      case KeyReleased(canvas, key, _, _) => {
+        pressedKeys = Buffer[Key.Value]()
       }
-      case KeyPressed(canvas, Key.Up, _, _) => {
-        if(world(player.x)(player.y - 1) != Wall){
-          player.move(player.x, player.y - 1)
-          repaint()
-        }
-      }
-      case KeyPressed(canvas, Key.Down, _, _) => {
-        if(world(player.x)(player.y + 1) != Wall){
-          player.move(player.x, player.y + 1)
-          repaint()
-        }
-      }
-        
+       
       case MouseClicked(canvas, point, _, clicks, _) => {       
         if(clicks == 2){
           world(point.x/cellSize)(point.y/cellSize) = Floor
@@ -122,14 +151,7 @@ object MainFrame extends SimpleSwingApplication  {
           repaint()
         }
       }
-      case MouseDragged(canvas, point, _) => {
-        lineTo(point)
-      }
-
     }
-    var path = new geom.GeneralPath
-    def lineTo(p: Point) { path.lineTo(p.x, p.y); repaint() }
-    
 
   }
 }
