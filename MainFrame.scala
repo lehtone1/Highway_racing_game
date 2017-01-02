@@ -21,36 +21,53 @@ object MainFrame extends SimpleSwingApplication  {
   var pressedKeys = Buffer[Key.Value]() //A buffer that holds all keys that are pressed at the same time
   
   
-  //Creates a row full of wall objects
-  def fillWall(row: Int) = {
-    for(line <- world){
-      line(row) = Wall
+
+  // Moves everything in the world one space downward
+  def moveWorldDown = {
+    var row = 0
+    player.move(player.x, player.y + 1)
+    while(row < world.size ){
+      var line = world(0).size
+      while(line >= 0){
+        println(line)
+        if(line < world(row).size - 1) {
+          world(row)(line + 1) = world(row)(line)
+          println("yep")
+        }
+        line -= 1
+      }
+      row += 1
     }
   }
   
-  //Creates holes marked with Floor-objects to the row.
-  def fillRow(row: Int) = {
-    val randomNum = r.nextInt(width)
-    var crawler = 0
-    while(crawler < randomNum){
-      val randomNum2 = r.nextInt(width - 1)
-      world(randomNum2)(row) = Floor
-      crawler += 1
+  //Creates a line of walls and floors
+  def createHoledLine = {
+  
+    //Creates a row full of wall objects
+    def createWall(line: Int) = {
+      world.map(_(line) = Wall)
     }
-  }
-  //Fills the "world" with holed walls
-  def fillWorld = {
-    for(line <- 0 to height - 1){
-      fillWall(line)
-      fillRow(line)
+    
+    //Creates holes marked with Floor-objects to the row.
+    def createHoles(line: Int) = {
+      val randomNum = r.nextInt(width)
+      var crawler = 0
+      while(crawler < randomNum){
+        val randomNum2 = r.nextInt(width - 1)
+        world(randomNum2)(line) = Floor
+        crawler += 1
+      }
     }
+    createWall(0)
+    createHoles(0)
+  
   }
+    
   
   val canvas = new GridPanel(rows0 = height, cols0 = width) {
     
   preferredSize = new Dimension(width * cellSize, height * cellSize)
   
-  fillWorld
   
 
   
@@ -134,15 +151,21 @@ object MainFrame extends SimpleSwingApplication  {
             player.move(player.x, player.y + 1)
             repaint()
           }
-        }
-  
+        }else if(pressedKeys contains Key.Enter){ //moves the world downwards and creates a new line to the first line
+          moveWorldDown
+          createHoledLine   
+          repaint()
+          }
       }
-      
+          
+  
       case KeyReleased(canvas, key, _, _) => {
         pressedKeys = Buffer[Key.Value]()
       }
        
-      case MouseClicked(canvas, point, _, clicks, _) => {       
+      case MouseClicked(canvas, point, _, clicks, _) => {  
+        println(point.x/cellSize)
+        println(point.y/cellSize)
         if(clicks == 2){
           world(point.x/cellSize)(point.y/cellSize) = Floor
           repaint()
