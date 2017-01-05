@@ -43,7 +43,7 @@ object MainFrame extends SimpleSwingApplication  {
     trueFalseTable = Buffer[Boolean]()
     var row = 0
     while(row < width){
-       if(world(row)(1) == Wall && world(row)(2) == Wall){
+       if((world(row)(1) == Wall && world(row)(2) == Wall) || (world(row)(3) == Wall && world(row)(2) == Wall)  ){
           trueFalseTable += false
        }else{
          trueFalseTable += true
@@ -76,7 +76,7 @@ object MainFrame extends SimpleSwingApplication  {
     def createHoles(line: Int) = {
       do{ 
         createWall(0)
-        val randomNum = r.nextInt(width)
+        val randomNum =  6 + r.nextInt(width  - 6)
         var crawler = 0
         while(crawler < randomNum){
           val randomNum2 = r.nextInt(width - 1)
