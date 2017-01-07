@@ -133,6 +133,52 @@ object MainFrame extends SimpleSwingApplication  {
     listenTo(canvas.keys)
     canvas.focusable = true
     canvas.requestFocus
+    
+    val aboutText = """In this game your mission is to survive
+                      |as long as possible. You will loose if your 
+                      |game figure will drop off the gamefield. The game
+                      |is moving the gamefield all the time downwards in an
+                      |increasing speed so it is all the time harder to stay on
+                      |the gamefield. The game creates obstacles on your path
+                      |to make it harder for you to move forward. You can 
+                      |jump over one obstacle, but if there is more that one
+                      |obstacle after the other you cannot move through it""".stripMargin
+                      
+   
+    val keyCommandsText = """Go Uo - Up Key
+                        |Go Down - Down Key
+                        |Go Left - Left Key
+                        |Go Right - Right Key
+                        |Jump Up - Space + Up Key
+                        |Jump Down - Space + Down Key
+                        |Jump Left - Space + Left Key
+                        |Jump Right - Space + Right Key""".stripMargin
+                      
+
+    
+    //Popup windows
+    def about() {
+      Dialog.showMessage(contents.head, aboutText, title="About")
+    }
+    
+    def keyCommands() {
+      Dialog.showMessage(contents.head, keyCommandsText, title="Key Commands")
+    }
+    
+    def highScore() {
+      Dialog.showMessage(contents.head, "Thank you!", title="High score")
+    }
+
+    //Gane menu functionalities About, High Score and Exit
+    menuBar = new MenuBar {   
+        contents += new Menu("Menu") {      
+          contents += new MenuItem(Action("About") { about()}) 
+          contents += new MenuItem(Action("Key commands") { keyCommands()})
+          contents += new MenuItem(Action("High Score") { highScore()})       
+          contents += new Separator        
+          contents += new MenuItem(Action("Exit") { dispose() })  
+        }
+    }
     //Determines the game reactions for keyboards and mouse events
     reactions += {
       case KeyPressed(canvas, key, _, _) => { //When any key is pressed
