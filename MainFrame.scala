@@ -9,6 +9,7 @@ import o1.game.Wall
 import o1.game.Spot
 import o1.game.Player
 import o1.game.Floor
+import o1.game.Timer
 import scala.collection.mutable.Buffer
 
 object MainFrame extends SimpleSwingApplication  {
@@ -17,7 +18,7 @@ object MainFrame extends SimpleSwingApplication  {
   val cellSize = 25
   var world: Array[Array[Spot]] = Array.fill(width, height)(Floor)
   val r = scala.util.Random
-  val player = new Player(width/2, height)
+  val player = new Player(width/2, height/2)
   var pressedKeys = Buffer[Key.Value]() //A buffer that holds all keys that are pressed at the same time
   var trueFalseTable = Buffer[Boolean]()
   
@@ -43,7 +44,7 @@ object MainFrame extends SimpleSwingApplication  {
     trueFalseTable = Buffer[Boolean]()
     var row = 0
     while(row < width){
-       if((world(row)(1) == Wall && world(row)(2) == Wall) || (world(row)(3) == Wall && world(row)(2) == Wall)  ){
+       if((world(row)(1) == Wall && world(row)(2) == Wall) || (world(row)(2) == Wall && world(row)(3) == Wall) || (world(row)(3) == Wall && world(row)(4) == Wall)  ){
           trueFalseTable += false
        }else{
          trueFalseTable += true
@@ -76,7 +77,7 @@ object MainFrame extends SimpleSwingApplication  {
     def createHoles(line: Int) = {
       do{ 
         createWall(0)
-        val randomNum =  6 + r.nextInt(width  - 6)
+        val randomNum =  10 + r.nextInt(width  - 10)
         var crawler = 0
         while(crawler < randomNum){
           val randomNum2 = r.nextInt(width - 1)
@@ -134,6 +135,24 @@ object MainFrame extends SimpleSwingApplication  {
     canvas.focusable = true
     canvas.requestFocus
     
+    var timeInterval = 1500
+    
+    //Creates Timer and the timer event
+    val timeOut = new javax.swing.AbstractAction() {
+      def actionPerformed(e : java.awt.event.ActionEvent) ={
+        moveWorldDown
+        makeTrueFalseArray
+        createHoledLine
+        repaint()
+      }
+    }
+    val t = new javax.swing.Timer(timeInterval, timeOut)
+    t.setRepeats(true)
+    t.start()
+    
+    
+    
+
     val aboutText = """In this game your mission is to survive
                       |as long as possible. You will loose if your 
                       |game figure will drop off the gamefield. The game
@@ -182,6 +201,8 @@ object MainFrame extends SimpleSwingApplication  {
     //Determines the game reactions for keyboards and mouse events
     reactions += {
       case KeyPressed(canvas, key, _, _) => { //When any key is pressed
+        timeInterval -= 2 //Decreases the Time Interval between events
+        t.setDelay(timeInterval) //Sets the new time interval to the Timer
         pressedKeys += key //the key is added to the pressed keys
         if(pressedKeys contains Key.Space){ //When space is one of the keys
           if(pressedKeys contains Key.Left){//the player moves two spaces to 
