@@ -1,4 +1,4 @@
-package game
+package o1.game
 
 import scala.swing._
 import scala.swing.event._
@@ -20,9 +20,8 @@ import javax.swing.Timer;
 import java.io.File
 import scala.collection.mutable.ArrayBuffer
 
-
-object BackgroundAnimation extends SimpleSwingApplication {
-  var background_IMG = ImageIO.read(new File("images/testroad.png"))
+object BackgroundAnimation extends SimpleSwingApplication{
+  var background_IMG = ImageIO.read(new File("images/csroad.png"))
   
   val FRAME_W=background_IMG.getWidth
   val FRAME_H=background_IMG.getHeight
@@ -41,7 +40,10 @@ object BackgroundAnimation extends SimpleSwingApplication {
   var srcx2=FRAME_W
   var srcy2=FRAME_H
   
-  var INCREMENT = 10 // määrittää nopeuden jolla taustakuva liikkuu
+  var srcy1a=0-FRAME_H
+  var srcy2a=0
+  
+  var INCREMENT = 1 // määrittää nopeuden jolla taustakuva liikkuu
                      // saman tekee myös timer arvo
                      // voidaan esimerkiksi tehdä niin, että lisätään moveBackground-metodiin
                      // if lause, että jos timer%50 niin INCREMENT kasvaa 5, eli siis jos
@@ -50,17 +52,18 @@ object BackgroundAnimation extends SimpleSwingApplication {
   
   
   
-  val canvas = new GridPanel(rows0=FRAME_W, cols0=FRAME_H) {
+  val canvas = new FlowPanel{
     
     override def paintComponent(g: Graphics2D){
       
-      g.drawImage(background_IMG, dx1, dy1, dx2, dy2, srcx1, srcy1,
-                    srcx2, srcy2, null);
+      g.drawImage(background_IMG, dx1, dy1, dx2, dy2, srcx1, srcy2,
+                    srcx2, srcy1, null);
+      g.drawImage(background_IMG, dx1, dy1, dx2, dy2, srcx1, srcy2a,srcx2, srcy1a, null);
       
       //g.drawString(progress_in_meters.toString()+"m", 10, 10)
     }
     
-    val timer = new javax.swing.Timer(120,Swing.ActionListener { e =>
+    val timer = new javax.swing.Timer(10,Swing.ActionListener { e =>
       
       moveBackground()
       repaint()
@@ -69,24 +72,34 @@ object BackgroundAnimation extends SimpleSwingApplication {
     timer.start()
     //taustaa liikuttava mekanismi/metodi
     def moveBackground(){
-      if (srcy1 < -17) {
-        srcy2 = FRAME_H
-        srcy1 = FRAME_H - srcy2-srcy1
-        
+      if (srcy1 == FRAME_H) {
+        srcy1 = 1-FRAME_H
+        srcy2 = 1
+        //srcy2 = FRAME_H
+        //srcy1 = FRAME_H - srcy2-srcy1
+        srcy1a += INCREMENT;
+        srcy2a += INCREMENT;
         
         }
+      else if(srcy1a == FRAME_H){
+        srcy1a = 1-FRAME_H
+        srcy2a = 1
+        srcy1 += INCREMENT;
+        srcy2 += INCREMENT;
+      }
       else{
-        srcy1 -= INCREMENT;
-        srcy2 -= INCREMENT;
+        srcy1a += INCREMENT;
+        srcy2a += INCREMENT;
+        srcy1 += INCREMENT;
+        srcy2 += INCREMENT;
         
         } 
     }
-    
+
     
     
     
   }
-  
   
   
   def top = new Frame{
