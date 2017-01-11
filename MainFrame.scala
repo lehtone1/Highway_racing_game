@@ -1,18 +1,38 @@
- package o1.game
-
+package game
 import scala.swing._
- import scala.swing.event._
- import java.awt.Color
- import java.awt.event._
- import java.awt.{geom}
-import o1.game.Wall
-import o1.game.Spot
-import o1.game.Player
-import o1.game.Floor
-import o1.game.Timer
+import scala.swing.event._
+import java.awt.Color
+import java.awt.event._
+import java.awt.{geom}
+import game.Wall
+import game.Spot
+import game.Player
+import game.Floor
+import game.Timer
 import scala.collection.mutable.Buffer
 
+import java.io.File
+import scala.swing._
+import scala.swing.event._
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
+
 object MainFrame extends SimpleSwingApplication  {
+  //val background = game.BackgroundAnimation
+  //val flowpanel = background.canvas
   val width = 40
   val height = 20
   val cellSize = 25
@@ -91,6 +111,34 @@ object MainFrame extends SimpleSwingApplication  {
     createHoles(0)
   
   }
+  
+  var background_IMG = ImageIO.read(new File("images/csroad.png"))
+  
+  val FRAME_W=background_IMG.getWidth
+  val FRAME_H=background_IMG.getHeight
+  var progress_in_meters = 0
+
+  
+  //dx ja dy määrittää mihin cohtaan GridPanelia kuva piirretään
+  //srcx ja srcy määrittää mikä osa kuvasta piirretään
+  var dx1=0  
+  var dy1=0
+  var dx2=FRAME_W
+  var dy2=FRAME_H
+  
+  var srcx1=0
+  var srcy1=0
+  var srcx2=FRAME_W
+  var srcy2=FRAME_H
+  var myColor = new Color(255,255,255,0)
+  var srcy1a=0-FRAME_H
+  var srcy2a=0
+  var speed = 10
+  var INCREMENT = 1 // määrittää nopeuden jolla taustakuva liikkuu
+                     // saman tekee myös timer arvo
+                     // voidaan esimerkiksi tehdä niin, että lisätään moveBackground-metodiin
+                     // if lause, että jos timer%50 niin INCREMENT kasvaa 5, eli siis jos
+                     // timer on jaollinen 50 niin vauhti kasvaa 5 !ESIM!:p
     
   
   val canvas = new GridPanel(rows0 = height, cols0 = width) {
@@ -103,6 +151,11 @@ object MainFrame extends SimpleSwingApplication  {
   //Paints the world again after some event
   
   override def paintComponent(g: Graphics2D) {
+      g.drawImage(background_IMG, dx1, dy1, dx2, dy2, srcx1, srcy2,
+                    srcx2, srcy1, null);
+      g.drawImage(background_IMG, dx1, dy1, dx2, dy2, srcx1, srcy2a,srcx2, srcy1a, null);
+      
+      g.drawString(progress_in_meters.toString()+"m", 10, 10)
       for (i <- 0 until width) {
         for (k <- 0 until height) { // Loop through the world grid
           world(i)(k) match {       // Match what is found in every position
@@ -111,7 +164,7 @@ object MainFrame extends SimpleSwingApplication  {
               g.fillRect(i * cellSize, k * cellSize, cellSize, cellSize)
             }
             case Floor => {         // If a floor is there, change color to cyan and paint a cyan tile representing floor
-              g.setColor(Color.WHITE)
+              g.setColor(myColor)
               g.fillRect(i * cellSize, k * cellSize, cellSize, cellSize)
             }
           }
@@ -120,6 +173,41 @@ object MainFrame extends SimpleSwingApplication  {
       g.setColor(Color.ORANGE)      // Set color for the player to be drawn
       g.fillOval(player.x * cellSize, player.y * cellSize, cellSize, cellSize) // Draw player to its location
       g.setColor(Color.GRAY)
+      
+      
+    }
+  
+  val timer = new javax.swing.Timer(speed,Swing.ActionListener { e =>
+      
+      moveBackground()
+      repaint()
+      progress_in_meters+=1
+      })
+    timer.start()
+    
+    def moveBackground(){
+      if (srcy1 == FRAME_H) {
+        srcy1 = 1-FRAME_H
+        srcy2 = 1
+        //srcy2 = FRAME_H
+        //srcy1 = FRAME_H - srcy2-srcy1
+        srcy1a += INCREMENT;
+        srcy2a += INCREMENT;
+        
+        }
+      else if(srcy1a == FRAME_H){
+        srcy1a = 1-FRAME_H
+        srcy2a = 1
+        srcy1 += INCREMENT;
+        srcy2 += INCREMENT;
+      }
+      else{
+        srcy1a += INCREMENT;
+        srcy2a += INCREMENT;
+        srcy1 += INCREMENT;
+        srcy2 += INCREMENT;
+        
+        } 
     }
   }
   
