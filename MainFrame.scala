@@ -1,13 +1,13 @@
-package o1.game
+package game
 import scala.swing._
 import scala.swing.event._
 import java.awt.Color
 import java.awt.event._
 import java.awt.{geom}
-import o1.game.Wall
-import o1.game.Spot
-import o1.game.Player
-import o1.game.Floor
+import game.Wall
+import game.Spot
+import game.Player
+import game.Floor
 import scala.collection.mutable.Buffer
 
 import java.io.File
@@ -29,11 +29,23 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
-object MainFrame2 extends SimpleSwingApplication {
-  val squareSize = 6
-  val width = 250
-  val height = 125
-  val cellSize = 4
+import java.net.URL
+import javax.sound.sampled._
+
+
+object MainFrame extends SimpleSwingApplication {
+  
+  val url = new URL("http://www.music.helsinki.fi/tmt/opetus/uusmedia/esim/a2002011001-e02.wav")
+  val audioIn = AudioSystem.getAudioInputStream(url)
+  val clip = AudioSystem.getClip
+  clip.open(audioIn)
+  clip.start()
+  clip.loop(5)
+  
+  val squareSize = 10
+  val width = 200
+  val height = 104
+  val cellSize = 5
   var world: Array[Array[Spot]] = Array.fill(height, width)(Floor)
   var firstSquares: Array[Array[Spot]] = Array.fill(squareSize,width )(Wall)
   val r = scala.util.Random
@@ -101,7 +113,9 @@ object MainFrame2 extends SimpleSwingApplication {
   
   }
   
-  var background_IMG = ImageIO.read(new File("images/csroad.png"))
+  var background_IMG = ImageIO.read(new File("images/highway.png"))
+  var playerIMG = ImageIO.read(new File("images/Player_Car_RED_50pix_SIZE.png"))
+  var enemyIMG = ImageIO.read(new File("images/Enemy_Car_GREEN_50pix_SIZE.png"))
   
   val FRAME_W=background_IMG.getWidth
   val FRAME_H=background_IMG.getHeight
@@ -161,9 +175,7 @@ object MainFrame2 extends SimpleSwingApplication {
             }
           }
         }
-        g.setColor(Color.ORANGE)      // Set color for the player to be drawn
-        g.fillOval(player.x, player.y, squareSize * cellSize, squareSize * cellSize) // Draw player to its location
-        g.setColor(Color.GRAY)
+        g.drawImage(playerIMG, null, player.x * cellSize, player.y* cellSize)
         
         
       }
@@ -278,7 +290,10 @@ object MainFrame2 extends SimpleSwingApplication {
           contents += new MenuItem(Action("Key commands") { keyCommands()})
           contents += new MenuItem(Action("High Score") { highScore()})       
           contents += new Separator        
-          contents += new MenuItem(Action("Exit") { dispose() })  
+          contents += new MenuItem(Action("Exit") { 
+            dispose()
+            clip.close()
+            })  
         }
     }
     
