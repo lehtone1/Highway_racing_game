@@ -24,143 +24,163 @@ import java.awt.Font
 import scala.collection.mutable.Buffer
 import scala.util.Random
 
+import java.awt.Robot;
+import java.net.URL
+import javax.sound.sampled._
+
+ 
 object MainFrame2 extends SimpleSwingApplication{
   
+  //MUSIC VARIABLES
+  //-------------------------------------------------------------------------------------------------------------------
+  val url = new URL("http://www.music.helsinki.fi/tmt/opetus/uusmedia/esim/a2002011001-e02.wav")
+  val audioIn = AudioSystem.getAudioInputStream(url)
+  val clip = AudioSystem.getClip
+  clip.open(audioIn)
+  clip.start()
+  clip.loop(5)
+  //-------------------------------------------------------------------------------------------------------------------
   
+  
+  //IMAGE VARIABLES
+  //-------------------------------------------------------------------------------------------------------------------
   var background_IMG = ImageIO.read(new File("images/highway.png"))
   var playerIMG = ImageIO.read(new File("images/Player_Car_RED_50pix_SIZE.png"))
   var enemyIMG = ImageIO.read(new File("images/Enemy_Car_GREEN_50pix_SIZE.png"))
-  var pressedKeys = Buffer[Key.Value]()
-  val cellSizeX = 50
-  val cellSizeY = 74
-  val width = 20
-  val height = 7
-  val player = new Player(width/2, 6)
-  
-  var possibleXpositions = new ArrayBuffer[Int]()
-  for(i<-0 until width){
-    possibleXpositions+=(i*cellSizeX)
-  }
-  var possibleYpositions = new ArrayBuffer[Int]()
-  for(i<-0 until height){
-    possibleYpositions+=(i*cellSizeY)
-  }
+  //-------------------------------------------------------------------------------------------------------------------
   
   
-  
-  
+  //GLOBAL VARIABLES
+  //-------------------------------------------------------------------------------------------------------------------
+  var count = 0
   val FRAME_W=background_IMG.getWidth
   val FRAME_H=background_IMG.getHeight
   var progress_in_meters = 0
-
-  var dx1=0  
-  var dy1=0
-  var dx2=FRAME_W
-  var dy2=FRAME_H
+  val cellSizeX = 50
+  val cellSizeY = 74
+  val width = 20           //amount of squares horizontally (width*cellSizeX = 1000)
+  val height = 7           //amount of squares vertically (height*cellSizeY = 518)
   
-  var srcx1=0
-  var srcy1=0
-  var srcx2=FRAME_W
-  var srcy2=FRAME_H
+  //val possibleXcoordinates = List.tabulate(width)(x=>x) //=(0,1,2,3,4,5,6,7,8,9,...,19)
+  //var world: Array[Array[Spot]] = Array.fill(width, height)(Floor) <------NOT USED------>
+  //val testWorld = List.tabulate(height, width)((y,x)=>Floor) <------NOT USED------>
   
-  var srcy1a=0-FRAME_H
-  var srcy2a=0
-  var speed = 1
-  var count = 0
-  var INCREMENT = 1 
-  var rand_dx1_enemy =Random.shuffle(possibleXpositions.toList).head
-  var rand_dx2_enemy = rand_dx1_enemy+cellSizeX
-  var rand_dy1_enemy = 0-1000
-  var rand_dy2_enemy = rand_dy1_enemy+cellSizeY
+  val possibleXpositions = List.tabulate(width)(x => x*cellSizeX)
+  val possibleYpositions = List.tabulate(width)(y => y*cellSizeY)
+  
+  //Creates a player, enemy and a background
+  //Enemy is a class defined in Enemy.scala, backgroundClass is a class defined in Background.scala
+  //Enemy class has functions getImage(), animateEnemyMovement() and enemyOutOfBounds()
+  //enemyOutOfBounds function returns true if enemy's x an y coordinate are not inside of the 'world'
+  
+  val player = new Player(width/2, 6)
+  
+  var enemy = new Enemy(Random.shuffle(possibleXpositions).head,0-1000,"images/Enemy_Car_GREEN_50pix_SIZE.png")
+  var backgroundClass = new Background(0,0,"images/highway.png")
+  //-------------------------------------------------------------------------------------------------------------------
   
   
-  
-  
+  //THE CANVAS/GRID/CONTENT OF FRAME
+  //-------------------------------------------------------------------------------------------------------------------
   val canvas = new GridPanel(rows0 = height, cols0 = width){
     preferredSize= new Dimension(width * cellSizeX, height * cellSizeY)
     
     override def paintComponent(g: Graphics2D){
-      g.drawImage(background_IMG, dx1, dy1, dx2, dy2, srcx1, srcy2, srcx2, srcy1, null);
-      g.drawImage(background_IMG, dx1, dy1, dx2, dy2, srcx1, srcy2a,srcx2, srcy1a, null);
       
-      g.drawImage(enemyIMG, rand_dx1_enemy, rand_dy1_enemy, rand_dx2_enemy, rand_dy2_enemy, 0, 0,cellSizeX, cellSizeY, null);
-
+      g.drawImage(background_IMG, backgroundClass.x, backgroundClass.y, backgroundClass.x2, backgroundClass.y2, 
+          backgroundClass.srcx1, backgroundClass.srcy2, backgroundClass.srcx2, backgroundClass.srcy1, null);
       
+      g.drawImage(background_IMG, backgroundClass.x, backgroundClass.y, backgroundClass.x2, backgroundClass.y2, 
+          backgroundClass.srcx1, backgroundClass.srcy2a, backgroundClass.srcx2, backgroundClass.srcy1a, null);
+      
+      
+      g.drawImage(enemy.getImage(), enemy.x, enemy.y, enemy.x2, enemy.y2, 0, 0,cellSizeX, cellSizeY, null);
       g.drawImage(playerIMG, null, player.x * cellSizeX, player.y* cellSizeY)
-      
-      
-      
+
       g.setColor(Color.RED)
       g.setFont(new Font("Arial", Font.PLAIN, 20))
       g.drawString(progress_in_meters.toString()+" m", 5, 18)
+      }
     }
+  //-------------------------------------------------------------------------------------------------------------------
+  
+  
+  //THE TOP DEF CREATES A MAIN FRAME AND FILLS IT WITH THE CANVAS
+  //-------------------------------------------------------------------------------------------------------------------
+  def top = new MainFrame{
+    
+    var speed = 10
     
     val timer = new javax.swing.Timer(speed,Swing.ActionListener { e =>
-      rand_dy1_enemy+=1
-      rand_dy2_enemy+=1
-      if(enemyOutOfBounds(rand_dy1_enemy)){
-        rand_dx1_enemy =Random.shuffle(possibleXpositions.toList).head
-        rand_dx2_enemy = rand_dx1_enemy+cellSizeX
-        rand_dy1_enemy = 0-1000
-        rand_dy2_enemy = rand_dy1_enemy+cellSizeY
-      }
-      
-      println(rand_dy1_enemy,rand_dy2_enemy)
-      moveBackground()
+      enemy.animateEnemyMovement()
+      backgroundClass.animateBackgroundMovement()
       repaint()
       progress_in_meters+=1
       })
     timer.start()
     
-    
-    def enemyOutOfBounds(dy:Int): Boolean = {
-      var returnVal = false
-      if(dy>=FRAME_H){
-        returnVal = true
-      }
-      returnVal
-    }
-    //taustaa liikuttava mekanismi/metodi ja vihollinen
-    def moveBackground(){
-      
-      if (srcy1 == FRAME_H) {
-        srcy1 = 1-FRAME_H
-        srcy2 = 1
-        //srcy2 = FRAME_H
-        //srcy1 = FRAME_H - srcy2-srcy1
-        srcy1a += INCREMENT;
-        srcy2a += INCREMENT;
-        
-        }
-      else if(srcy1a == FRAME_H){
-        
-        srcy1a = 1-FRAME_H
-        srcy2a = 1
-        srcy1 += INCREMENT;
-        srcy2 += INCREMENT;
-      }
-      else{
-        srcy1a += INCREMENT;
-        srcy2a += INCREMENT;
-        srcy1 += INCREMENT;
-        srcy2 += INCREMENT;
-        
-        } 
-    }
-
+    //Timer for gradually increasing the delay in timer, makes the animations faster by decreasing variable 'speed'
+    //Aims to create an illusion that the enemy car is accelerating 
+    val speedTimer = new javax.swing.Timer(5000, Swing.ActionListener { x => 
+      speed-=1
+      if(speed>=0)timer.setDelay(speed)
+      })
+    speedTimer.start()
     
     
-    
-  }
-  
-  
-  def top = new Frame{
-    title = "BackgroundAnimation"
-    preferredSize = new Dimension(width * cellSizeX+18, height * cellSizeY+37)
+    title = "Main"
+    preferredSize = new Dimension(width * cellSizeX+18, height * cellSizeY+60)
     canvas.focusable = true
-    
+    canvas.requestFocus()
     contents = canvas
     listenTo(canvas.keys)
+    listenTo(canvas.mouse.clicks)
+    
+    val aboutText = """In this game your mission is to survive
+                      |as long as possible. You will loose if your 
+                      |game figure will drop off the gamefield. The game
+                      |is moving the gamefield all the time downwards in an
+                      |increasing speed so it is all the time harder to stay on
+                      |the gamefield. The game creates obstacles on your path
+                      |to make it harder for you to move forward. You can 
+                      |jump over one obstacle, but if there is more that one
+                      |obstacle after the other you cannot move through it""".stripMargin
+   
+    val keyCommandsText = """Go Up - Up Key
+                        |Go Down - Down Key
+                        |Go Left - Left Key
+                        |Go Right - Right Key
+                        |Jump Up - Space + Up Key
+                        |Jump Down - Space + Down Key
+                        |Jump Left - Space + Left Key
+                        |Jump Right - Space + Right Key""".stripMargin
+
+    //Popup windows
+    def about() {
+      Dialog.showMessage(contents.head, aboutText, title="About")
+    }
+    
+    def keyCommands() {
+      Dialog.showMessage(contents.head, keyCommandsText, title="Key Commands")
+    }
+    
+    def highScore() {
+      Dialog.showMessage(contents.head, "Thank you!", title="High score")
+    }
+    
+    //Gane menu functionalities About, High Score and Exit
+    menuBar = new MenuBar {
+      contents += new Menu("Menu") {
+        contents += new MenuItem(Action("About") { about()})
+        contents += new MenuItem(Action("Key commands") { keyCommands()})
+        contents += new MenuItem(Action("High Score") { highScore()})       
+        contents += new Separator        
+        contents += new MenuItem(Action("Exit") {
+          dispose()
+          clip.close() //MUSIC OFF
+          })
+        }
+      }
     reactions +={
       case KeyPressed(canvas,key,_,_) =>{
         if(key == Key.Left){
@@ -199,6 +219,6 @@ object MainFrame2 extends SimpleSwingApplication{
       
     }
     
-    
   }
+  
 }
