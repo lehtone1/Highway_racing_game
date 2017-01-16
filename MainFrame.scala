@@ -1,13 +1,10 @@
-package game
+
+package o1.game
 import scala.swing._
 import scala.swing.event._
 import java.awt.Color
 import java.awt.event._
 import java.awt.{geom}
-import game.Wall
-import game.Spot
-import game.Player
-import game.Floor
 import scala.collection.mutable.Buffer
 
 import java.io.File
@@ -34,14 +31,15 @@ import javax.sound.sampled._
 
 
 object MainFrame extends SimpleSwingApplication {
-  
+  println("go")
+  /**
   val url = new URL("http://www.music.helsinki.fi/tmt/opetus/uusmedia/esim/a2002011001-e02.wav")
   val audioIn = AudioSystem.getAudioInputStream(url)
   val clip = AudioSystem.getClip
   clip.open(audioIn)
   clip.start()
   clip.loop(5)
-  
+  */
   val squareSize = 10
   val width = 200
   val height = 104
@@ -57,7 +55,7 @@ object MainFrame extends SimpleSwingApplication {
   // Moves everything in the world one space downward
   def moveWorldDown = {
     var line = height - 1
-    player.move(player.x, player.y + cellSize)
+    player.move(player.x, player.y + 1)
     while(line > 0){
       world(line) = world(line - 1)
       line -=1
@@ -114,8 +112,8 @@ object MainFrame extends SimpleSwingApplication {
   }
   
   var background_IMG = ImageIO.read(new File("images/highway.png"))
-  var playerIMG = ImageIO.read(new File("images/Player_Car_RED_50pix_SIZE.png"))
-  var enemyIMG = ImageIO.read(new File("images/Enemy_Car_GREEN_50pix_SIZE.png"))
+  var playerIMG = ImageIO.read(new File("images/Player_Car_RED_updated.png"))
+  var enemyIMG = ImageIO.read(new File("images/cartire50x50.png"))
   
   val FRAME_W=background_IMG.getWidth
   val FRAME_H=background_IMG.getHeight
@@ -156,17 +154,18 @@ object MainFrame extends SimpleSwingApplication {
   
   
     override def paintComponent(g: Graphics2D) {
+        println("paint")
         g.drawImage(background_IMG, dx1, dy1, dx2, dy2, srcx1, srcy2,
                       srcx2, srcy1, null);
         g.drawImage(background_IMG, dx1, dy1, dx2, dy2, srcx1, srcy2a,srcx2, srcy1a, null);
         
         g.drawString(progress_in_meters.toString()+"m", 10, 10)
         for (i <- 0 until width) {
-          for (k <- 0 until height) { // Loop through the world grid
+          for (k <- 0 until height - 10) { // Loop through the world grid
             world(k)(i) match {       // Match what is found in every position
               case Wall => {          // If a wall is there, change color to black and paint a black tile representing a wall
-                g.setColor(Color.BLACK)
-                g.fillRect(i * cellSize, k * cellSize, cellSize, cellSize)
+                if((i  == 0 || i%10 == 0) && (world(k + 1)(i) == Floor || world(k + squareSize)(i) == Wall)) g.drawImage(enemyIMG, null, i * cellSize, k * cellSize - 50)
+                //if(((i -1) == 0 && (k - 1) == 0) ||  ((i - 1)%10 == 0 && (k - 1)%10 == 0)) g.drawImage(enemyIMG, null, i * cellSize, k * cellSize)
               }
               case Floor => {         // If a floor is there, change color to cyan and paint a cyan tile representing floor
                 g.setColor(myColor)
@@ -217,12 +216,13 @@ object MainFrame extends SimpleSwingApplication {
     canvas.focusable = true
     canvas.requestFocus
     
-    var timeInterval = 150
+    var timeInterval = 500
     var firstSquaresCrawler = 0
     
     //Creates Timer and the timer event
     val timeOut = new javax.swing.AbstractAction() {
       def actionPerformed(e : java.awt.event.ActionEvent) ={
+        println("timer")
         if(firstSquaresCrawler == 0){
           firstSquares = Array.fill(height,width )(Wall)
           makeTrueFalseArray
@@ -292,7 +292,7 @@ object MainFrame extends SimpleSwingApplication {
           contents += new Separator        
           contents += new MenuItem(Action("Exit") { 
             dispose()
-            clip.close()
+            //clip.close()
             })  
         }
     }
@@ -306,44 +306,44 @@ object MainFrame extends SimpleSwingApplication {
         pressedKeys += key //the key is added to the pressed keys
         if(pressedKeys contains Key.Space){ //When space is one of the keys
           if(pressedKeys contains Key.Left){//the player moves two spaces to 
-            if(world(player.y / cellSize)(player.x / cellSize - squareSize * 2) != Wall){//chosen direction
-              player.move(player.x - squareSize * 2 * cellSize , player.y)
+            if(world(player.y)(player.x  - squareSize * 2) != Wall){//chosen direction
+              player.move(player.x - squareSize * 2  , player.y)
               repaint()
             }
           }else if(pressedKeys contains Key.Right) {
-            if(world(player.y/ cellSize)(player.x/ cellSize + squareSize * 2 ) != Wall){
-              player.move(player.x + squareSize * 2 * cellSize, player.y)
+            if(world(player.y)(player.x + squareSize * 2 ) != Wall){
+              player.move(player.x + squareSize * 2 , player.y)
               repaint()
             }
           }else if(pressedKeys contains Key.Up) {
-            if(world(player.y/ cellSize - squareSize * 2)(player.x/ cellSize) != Wall){
-              player.move(player.x, player.y - squareSize * 2 * cellSize)
+            if(world(player.y - squareSize * 2)(player.x) != Wall){
+              player.move(player.x, player.y - squareSize * 2)
               repaint()
             }
           }else if(pressedKeys contains Key.Down){
-            if(world(player.y/ cellSize + squareSize * 2)(player.x/ cellSize) != Wall){
-              player.move(player.x, player.y + squareSize * 2 * cellSize)
+            if(world(player.y + squareSize * 2)(player.x) != Wall){
+              player.move(player.x, player.y + squareSize * 2 )
               repaint()
             }
           }   
         }else if(pressedKeys contains Key.Left){
-          if(world(player.y/ cellSize)(player.x/ cellSize - squareSize) != Wall){
-            player.move(player.x - squareSize * cellSize, player.y)
+          if(world(player.y)(player.x - squareSize) != Wall){
+            player.move(player.x - squareSize, player.y)
             repaint()
             }
         }else if(pressedKeys contains Key.Right) {
-          if(world(player.y/ cellSize)(player.x/ cellSize + squareSize ) != Wall){
-            player.move(player.x + squareSize * cellSize, player.y)
+          if(world(player.y)(player.x + squareSize ) != Wall){
+            player.move(player.x + squareSize, player.y)
             repaint()
             }
         }else if(pressedKeys contains Key.Up) {
-          if(world(player.y/ cellSize - squareSize)(player.x/ cellSize) != Wall){
-            player.move(player.x, player.y - squareSize * cellSize)
+          if(world(player.y - squareSize)(player.x) != Wall){
+            player.move(player.x, player.y - squareSize)
             repaint()
             }
         }else if(pressedKeys contains Key.Down){
-          if(world(player.y/ cellSize + squareSize)(player.x/ cellSize) != Wall){
-            player.move(player.x, player.y + squareSize * cellSize)
+          if(world(player.y + squareSize)(player.x) != Wall){
+            player.move(player.x, player.y + squareSize )
             repaint()
           }
         }
@@ -359,7 +359,6 @@ object MainFrame extends SimpleSwingApplication {
 
   }
 }
-  
   
   
   
