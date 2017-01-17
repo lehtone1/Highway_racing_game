@@ -49,6 +49,7 @@ object MainFrame extends SimpleSwingApplication {
   val player = new Player(0, 0)
   var pressedKeys = Buffer[Key.Value]() //A buffer that holds all keys that are pressed at the same time
   var trueFalseTable = Buffer[Boolean]()
+  var counter = -1
   
   
   // Moves everything in the world one space downward
@@ -112,7 +113,7 @@ object MainFrame extends SimpleSwingApplication {
   
   var background_IMG = ImageIO.read(new File("images/highway.png"))
   var playerIMG = ImageIO.read(new File("images/Player_Car_RED_updated.png"))
-  var enemyIMG = ImageIO.read(new File("images/cartire50x50.png"))
+  var enemyIMG = ImageIO.read(new File("images/Enemy_car_GREEN_updated.png"))
   
   val FRAME_W=background_IMG.getWidth
   val FRAME_H=background_IMG.getHeight
@@ -163,12 +164,25 @@ object MainFrame extends SimpleSwingApplication {
           for (k <- 0 until height - 1) { // Loop through the world grid
             world(k)(i) match {       // Match what is found in every position
               case Wall => {          // If a wall is there, change color to black and paint a black tile representing a wall
-                if(  (i  == 0 || i%10 == 0) && (world(k + 1)(i) == Floor)) {
-                  g.drawImage(enemyIMG, null, i * cellSize, k * cellSize - 50)
-                  if(k > squareSize - 1 && world(k + 1 - squareSize)(i) == Wall){
-                    g.drawImage(enemyIMG, null, i * cellSize, k * cellSize - 50 - 50)
+                if(i  == 0 || i%10 == 0){
+                  var crawler = 0
+                  if(counter == -1){
+                    counter = - 1
+                  }else{
+                    while(crawler <= 9){
+                      if(world(counter + crawler * squareSize)(i) == Wall){
+                        g.drawImage(enemyIMG, null, i * cellSize, counter * cellSize + crawler * squareSize * cellSize - 50)
+                      }
+                      crawler += 1
+                    }
+                    
                   }
-                }
+         
+   
+                   
+                  }
+                
+               
 
                 //}else if(k > squareSize - 1 && (i  == 0 || i%10 == 0) && (world(k +1 -squareSize)(i) == Floor)){
                  // g.drawImage(enemyIMG, null, i * cellSize, k * cellSize - 50)
@@ -224,7 +238,7 @@ object MainFrame extends SimpleSwingApplication {
     canvas.focusable = true
     canvas.requestFocus
     
-    var timeInterval = 500
+    var timeInterval = 100
     var firstSquaresCrawler = 0
     
     //Creates Timer and the timer event
@@ -244,25 +258,18 @@ object MainFrame extends SimpleSwingApplication {
         }
         canvas.moveBackground()
         repaint()
+        counter += 1
+        if(counter == squareSize){
+          counter = 0
+        }
       }
     }
     val t = new javax.swing.Timer(timeInterval, timeOut)
     t.setRepeats(true)
     t.start()
     
-    var timeInterval2 = 1
     
-    //Creates Timer and the timer event
-    val timeOut2 = new javax.swing.AbstractAction() {
-      def actionPerformed(e : java.awt.event.ActionEvent) ={
-        canvas.moveBackground()
-        repaint()
-      }
-    }
-    
-    val t2 = new javax.swing.Timer(timeInterval2, timeOut2)
-    t2.setRepeats(true)
-    t2.start()
+
     
     
     
