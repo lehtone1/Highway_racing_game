@@ -1,4 +1,3 @@
-
 package o1.game
 import scala.swing._
 import scala.swing.event._
@@ -97,7 +96,7 @@ object MainFrame extends SimpleSwingApplication {
         val randomNum = 8 + r.nextInt(width/squareSize - 8)
         var crawler = 0
         while(crawler < randomNum){
-          var randomNumTreeni = 1 +  r.nextInt(width/squareSize - 1)
+          var randomNumTreeni = 1 + r.nextInt(width/squareSize)
           var randomNum2 = (squareSize * randomNumTreeni)
           var squareLowerLimit = randomNum2- squareSize
           for(line <- 0  until squareSize){
@@ -161,10 +160,19 @@ object MainFrame extends SimpleSwingApplication {
         
         g.drawString(progress_in_meters.toString()+"m", 10, 10)
         for (i <- 0 until width) {
-          for (k <- 0 until height - 10) { // Loop through the world grid
+          for (k <- 0 until height - 1) { // Loop through the world grid
             world(k)(i) match {       // Match what is found in every position
               case Wall => {          // If a wall is there, change color to black and paint a black tile representing a wall
-                if((i  == 0 || i%10 == 0) && (world(k + 1)(i) == Floor || world(k + squareSize)(i) == Wall)) g.drawImage(enemyIMG, null, i * cellSize, k * cellSize - 50)
+                if(  (i  == 0 || i%10 == 0) && (world(k + 1)(i) == Floor)) {
+                  g.drawImage(enemyIMG, null, i * cellSize, k * cellSize - 50)
+                  if(k > squareSize - 1 && world(k + 1 - squareSize)(i) == Wall){
+                    g.drawImage(enemyIMG, null, i * cellSize, k * cellSize - 50 - 50)
+                  }
+                }
+
+                //}else if(k > squareSize - 1 && (i  == 0 || i%10 == 0) && (world(k +1 -squareSize)(i) == Floor)){
+                 // g.drawImage(enemyIMG, null, i * cellSize, k * cellSize - 50)
+                //}
                 //if(((i -1) == 0 && (k - 1) == 0) ||  ((i - 1)%10 == 0 && (k - 1)%10 == 0)) g.drawImage(enemyIMG, null, i * cellSize, k * cellSize)
               }
               case Floor => {         // If a floor is there, change color to cyan and paint a cyan tile representing floor
@@ -222,14 +230,11 @@ object MainFrame extends SimpleSwingApplication {
     //Creates Timer and the timer event
     val timeOut = new javax.swing.AbstractAction() {
       def actionPerformed(e : java.awt.event.ActionEvent) ={
-        println("timer")
         if(firstSquaresCrawler == 0){
           firstSquares = Array.fill(height,width )(Wall)
           makeTrueFalseArray
           createHoledLine
         }
-        canvas.moveBackground()
-        repaint()
         progress_in_meters+=1
         moveWorldDown
         world(0) = firstSquares(firstSquaresCrawler)
@@ -237,13 +242,27 @@ object MainFrame extends SimpleSwingApplication {
         if(firstSquaresCrawler == squareSize){
           firstSquaresCrawler = 0
         }
+        canvas.moveBackground()
+        repaint()
+      }
+    }
+    val t = new javax.swing.Timer(timeInterval, timeOut)
+    t.setRepeats(true)
+    t.start()
+    
+    var timeInterval2 = 1
+    
+    //Creates Timer and the timer event
+    val timeOut2 = new javax.swing.AbstractAction() {
+      def actionPerformed(e : java.awt.event.ActionEvent) ={
+        canvas.moveBackground()
         repaint()
       }
     }
     
-    val t = new javax.swing.Timer(timeInterval, timeOut)
-    t.setRepeats(true)
-    t.start()
+    val t2 = new javax.swing.Timer(timeInterval2, timeOut2)
+    t2.setRepeats(true)
+    t2.start()
     
     
     
@@ -332,6 +351,7 @@ object MainFrame extends SimpleSwingApplication {
             repaint()
             }
         }else if(pressedKeys contains Key.Right) {
+          println( world(player.y)(player.x + squareSize))
           if(world(player.y)(player.x + squareSize ) != Wall){
             player.move(player.x + squareSize, player.y)
             repaint()
@@ -347,6 +367,9 @@ object MainFrame extends SimpleSwingApplication {
             repaint()
           }
         }
+        else if(key == Key.Enter){
+          t.stop()
+        }
       }
       
           
@@ -359,6 +382,5 @@ object MainFrame extends SimpleSwingApplication {
 
   }
 }
-  
   
   
