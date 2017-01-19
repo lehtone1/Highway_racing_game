@@ -41,7 +41,7 @@ object MainFrame2a extends SimpleSwingApplication{
   
   //IMAGE VARIABLES
   //-------------------------------------------------------------------------------------------------------------------
-  var background_IMG = ImageIO.read(new File("images/highwayInMiddle1.png"))
+  var background_IMG = ImageIO.read(new File("images/highwayInMiddle.png"))
   var playerIMG = ImageIO.read(new File("images/Player_Car_RED_50x80.png"))
   var enemyIMG = ImageIO.read(new File("images/Enemy_Car_GREEN_50x80.png"))
   var myColor = new Color(255,255,255,0)
@@ -93,7 +93,7 @@ object MainFrame2a extends SimpleSwingApplication{
       for (i <- 0 until width*squareSize) {
           for (k <- 0 until height*squareSize - 1) {                           // Loop through the world grid
             world.getWorld(k)(i) match {                                       // Match what is found in every position
-              case Wall => {                                                   // If a wall is there, paint enemy
+              case Enemy => {                                                   // If a wall is there, paint enemy
                 if(i==0 || i%10==0){
                   var crawler = 0
                   if(counter == -1){
@@ -101,7 +101,7 @@ object MainFrame2a extends SimpleSwingApplication{
                   }
                   else{
                     while(crawler<height){
-                      if(world.getWorld(counter+crawler*squareSize)(i)==Wall){
+                      if(world.getWorld(counter+crawler*squareSize)(i)==Enemy){
                         g.drawImage(enemyIMG, null, i * cellSizeX, counter*cellSizeY+crawler*squareSize*cellSizeY - 80)
                       }
                       crawler += 1
@@ -111,7 +111,7 @@ object MainFrame2a extends SimpleSwingApplication{
                 
                 
               }
-              case Floor => {                        // If a floor is there, change color to TRANSPARENT and paint Floor
+              case Road => {                        // If a floor is there, change color to TRANSPARENT and paint Floor
                 g.setColor(myColor)
                 g.fillRect(i * cellSizeX, k * cellSizeY, cellSizeX, cellSizeY)
               }
@@ -189,12 +189,12 @@ object MainFrame2a extends SimpleSwingApplication{
     val timer = new javax.swing.Timer(speed,Swing.ActionListener { e =>
       backgroundClass.animateBackgroundMovement()
       if(firstSquaresCrawler == 0){
-        world.firstSquares = Array.fill(squareSize ,width * squareSize )(Wall)
+        world.firstSquares = Array.fill(squareSize ,width * squareSize )(Enemy)
         world.makeTrueFalseArray
         world.createHoledLine
         }
-      progress_in_meters+=1
       world.moveWorldDown
+      progress_in_meters+=1
       player.move(player.x, player.y + 1)
       world.getWorld(0) = world.firstSquares(firstSquaresCrawler)
       firstSquaresCrawler += 1
@@ -226,12 +226,13 @@ object MainFrame2a extends SimpleSwingApplication{
     
     //Timer for gradually increasing the delay in timer, makes the animations faster by decreasing variable 'speed'
     //Aims to create an illusion that the enemy car is accelerating 
-    val speedTimer = new javax.swing.Timer(2000, Swing.ActionListener { x => 
+   val speedTimer = new javax.swing.Timer(2000, Swing.ActionListener { x => 
       speed-=1
       if(speed>=0)timer.setDelay(speed)
       else timer.setDelay(0)
       })
     speedTimer.start()
+    
     
     
     
@@ -291,44 +292,44 @@ object MainFrame2a extends SimpleSwingApplication{
         pressedKeys += key //the key is added to the pressed keys
         if(pressedKeys contains Key.Space){ //When space is one of the keys
           if(pressedKeys contains Key.Left){//the player moves two spaces to 
-            if(player.jumpCanMoveTo(player.x - squareSize * 2, player.y) && world.getWorld(player.y)(player.x  - squareSize * 2) != Wall){//chosen direction
+            if(player.jumpCanMoveTo(player.x - squareSize * 2, player.y) && world.getWorld(player.y)(player.x  - squareSize * 2) != Enemy){//chosen direction
               player.move(player.x - squareSize * 2  , player.y)
               repaint()
             }
           }else if(pressedKeys contains Key.Right ) {
-            if(player.jumpCanMoveTo(player.x + squareSize * 2, player.y ) && world.getWorld(player.y)(player.x + squareSize * 2 ) != Wall){
+            if(player.jumpCanMoveTo(player.x + squareSize * 2, player.y ) && world.getWorld(player.y)(player.x + squareSize * 2 ) != Enemy){
               player.move(player.x + squareSize * 2 , player.y)
               repaint()
             }
           }else if(pressedKeys contains Key.Up) {
-            if(player.jumpCanMoveTo(player.x , player.y - squareSize * 2) && world.getWorld(player.y - squareSize * 2)(player.x) != Wall ){
+            if(player.jumpCanMoveTo(player.x , player.y - squareSize * 2) && world.getWorld(player.y - squareSize * 2)(player.x) != Enemy ){
               player.move(player.x, player.y - squareSize * 2)
               repaint()
             }
           }else if(pressedKeys contains Key.Down){
-            if(player.jumpCanMoveTo(player.x, player.y + squareSize * 2) && world.getWorld(player.y + squareSize * 2)(player.x) != Wall ){
+            if(player.jumpCanMoveTo(player.x, player.y + squareSize * 2) && world.getWorld(player.y + squareSize * 2)(player.x) != Enemy ){
               player.move(player.x, player.y + squareSize * 2 )
               repaint()
             }
           }   
         }else if(pressedKeys contains Key.Left ){
-          if(player.canMoveTo(player.x - squareSize, player.y) && world.getWorld(player.y)(player.x - squareSize) != Wall){
+          if(player.canMoveTo(player.x - squareSize, player.y) && world.getWorld(player.y)(player.x - squareSize) != Enemy){
             player.move(player.x - squareSize, player.y)
             repaint()
             }
         }else if(pressedKeys contains Key.Right) {
-          if(player.canMoveTo(player.x + squareSize, player.y) && world.getWorld(player.y)(player.x + squareSize ) != Wall ){
+          if(player.canMoveTo(player.x + squareSize, player.y) && world.getWorld(player.y)(player.x + squareSize ) != Enemy ){
             player.move(player.x + squareSize, player.y)
             repaint()
             }
         }else if(pressedKeys contains Key.Up) {
-         if(player.canMoveTo(player.x , player.y - squareSize) && world.getWorld(player.y - squareSize)(player.x) != Wall){
+         if(player.canMoveTo(player.x , player.y - squareSize) && world.getWorld(player.y - squareSize)(player.x) != Enemy){
             player.move(player.x, player.y - squareSize)
             repaint()
             
           }
         }else if(pressedKeys contains Key.Down){
-          if(player.canMoveTo(player.x , player.y + squareSize) && world.getWorld(player.y + squareSize)(player.x) != Wall ){
+          if(player.canMoveTo(player.x , player.y + squareSize) && world.getWorld(player.y + squareSize)(player.x) != Enemy ){
             player.move(player.x, player.y + squareSize )
             repaint()
           }

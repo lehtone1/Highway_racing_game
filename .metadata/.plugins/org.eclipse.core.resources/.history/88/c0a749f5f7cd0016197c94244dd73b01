@@ -1,0 +1,32 @@
+import scala.swing._
+import scala.swing.event._
+import java.awt.event._
+import scala.collection.mutable.Buffer
+
+object KeyEventTest extends SimpleSwingApplication {
+    val pressedKeys = Buffer[Key.Value]()
+    def top = new MainFrame {
+        val label = new Label {
+            text = "No click yet"
+        }
+        contents = new BoxPanel(Orientation.Vertical) {
+            contents += label
+            border = Swing.EmptyBorder(30,30,10,10)
+            listenTo(keys)
+            reactions += {
+                case KeyPressed(_, key, _, _) =>
+                    pressedKeys += key
+                    if(pressedKeys contains Key.Space){
+                      label.text = "Space is down"
+                      if(pressedKeys contains Key.Up)
+                        label.text = "Space and Up are down"
+                    }else if(pressedKeys contains Key.Up)
+                      label.text = "Up is down"
+                case KeyReleased(_, key, _, _) =>
+                    pressedKeys -= key
+            }
+            focusable = true
+            requestFocus
+        }
+    }
+}      
